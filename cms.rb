@@ -10,6 +10,14 @@ configure do
   set :session_secret, "it's a secret to everybody"
 end
 
+def data_path
+  if ENV["RACK_ENV"] == 'test'
+    File.expand_path('../test/data', __FILE__)
+  else
+    File.expand_path('../data', __FILE__)
+  end
+end
+
 def render_markdown(md)
   markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
   markdown.render(md)
@@ -28,12 +36,13 @@ def load_file_content(path)
 end
 
 get '/' do
-  @files = Dir.glob(root + "/data/*").map { |path| File.basename(path) }
+  pattern = File.join(data_path, '*')
+  @files = Dir.glob(pattern).map { |path| File.basename(path) }
   erb :index
 end
 
 get '/:filename' do |filename|
-  file_path = root + "/data/" + filename
+  file_path = File.join(data_path, filename)
 
   if File.file?(file_path)
     load_file_content(file_path)
@@ -44,14 +53,14 @@ get '/:filename' do |filename|
 end
 
 get '/:filename/edit' do |filename|
-  file_path = root + "/data/" + filename
+  file_path = File.join(data_path, filename)
   @filename = filename
   @content = File.read(file_path)
   erb :edit
 end
 
 post '/:filename' do |filename|
-  file_path = root + "/data/" + filename
+  file_path = File.join(data_path, filename)
   File.write(file_path, params[:content])
   session[:message] = "Changes to #{filename} have been saved."
   redirect '/'

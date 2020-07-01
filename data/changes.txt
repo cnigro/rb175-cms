@@ -1,1 +1,1 @@
-new content
+This is the changes.txt file.
