@@ -31,14 +31,14 @@ def load_file_content(path)
     headers["Content-Type"] = "text/plain"
     content
   when '.md'
-    render_markdown(content)
+    erb render_markdown(content)
   end
 end
 
 get '/' do
   pattern = File.join(data_path, '*')
   @files = Dir.glob(pattern).map { |path| File.basename(path) }
-  erb :index
+  erb :index, layout: :layout
 end
 
 get '/:filename' do |filename|
@@ -56,7 +56,7 @@ get '/:filename/edit' do |filename|
   file_path = File.join(data_path, filename)
   @filename = filename
   @content = File.read(file_path)
-  erb :edit
+  erb :edit, layout: :layout
 end
 
 post '/:filename' do |filename|
