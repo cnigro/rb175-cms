@@ -10,6 +10,14 @@ configure do
   set :session_secret, "it's a secret to everybody"
 end
 
+def error_for_document_name(name)
+  if !(1..100).cover? name.size
+    'List name must be between 1 and 100 characters.'
+  elsif session[:lists].any? { |list| list[:name] == name }
+    'List name must be unique.'
+  end
+end
+
 def data_path
   if ENV["RACK_ENV"] == 'test'
     File.expand_path('../test/data', __FILE__)
@@ -41,6 +49,34 @@ get '/' do
   erb :index, layout: :layout
 end
 
+get '/new' do
+  erb :new, layout: :layout
+end
+
+post '/create' do
+  filename = params[:filename].to_s
+
+  if filename.size == 0
+    session[:message] = "A name is required."
+    status 422
+    erb :new
+  else
+    file_path = File.join(data_path, filename)
+    
+    File.open(file_path, 'w') { |f| f.write('') }
+    session[:message] = "#{params[:filename]} was created."
+    
+    redirect '/'
+  end
+end
+
+post '/:filename' do |filename|
+  file_path = File.join(data_path, filename)
+  File.write(file_path, params[:content])
+  session[:message] = "Changes to #{filename} have been saved."
+  redirect '/'
+end
+
 get '/:filename' do |filename|
   file_path = File.join(data_path, filename)
 
@@ -59,9 +95,4 @@ get '/:filename/edit' do |filename|
   erb :edit, layout: :layout
 end
 
-post '/:filename' do |filename|
-  file_path = File.join(data_path, filename)
-  File.write(file_path, params[:content])
-  session[:message] = "Changes to #{filename} have been saved."
-  redirect '/'
-end
+
