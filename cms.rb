@@ -64,7 +64,7 @@ post '/create' do
     file_path = File.join(data_path, filename)
     
     File.open(file_path, 'w') { |f| f.write('') }
-    session[:message] = "#{params[:filename]} was created."
+    session[:message] = "#{params[:filename]} has been created."
     
     redirect '/'
   end
@@ -93,6 +93,13 @@ get '/:filename/edit' do |filename|
   @filename = filename
   @content = File.read(file_path)
   erb :edit, layout: :layout
+end
+
+post '/:filename/delete' do |filename|
+  file_path = File.join(data_path, filename)
+  File.delete(file_path)
+  session[:message] = "#{filename} has been deleted."
+  redirect '/'
 end
 
 
